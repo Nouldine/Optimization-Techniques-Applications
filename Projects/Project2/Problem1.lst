@@ -1,0 +1,322 @@
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 1
+Alloy blending
+C o m p i l a t i o n
+
+
+   2   
+      The company Steelco has received an order for 500 tones of steel 
+      to be used in shipbuilding. The steel must have the following characteristics:
+       
+      Chemical Element Minimum Grade Maximum Grade 
+      Carbon 	2	3 
+      copper(cu)	0.4	0.6
+      Manganese(Mn)	1.2	1.65
+       
+       
+      The company has seven different raw material in stock that maybe used for the production of this steel. The followin table lists the grades, available  amounts and pricesfor all materials:
+       
+      Raw Meterial 	C% 	Cu% 	Mn% 	Available in t cost in  $/t
+       
+      Iron alloy 	1 	2.5	1.3 	400	200
+      iron2		3	0.8		300	250 
+      iron3		90		500	220		
+      cu1		96	4	200	240	
+      al1		0.4	1.2	300	200
+      al2		0.6		250	165 
+       
+      The objective is to determine the composition of the steel that minimizes the
+      production cost. 
+  27   
+  28  Set
+  29          elements / c carbon, cu copper, mn manganese /,
+  30          raw / iron1 * iron3, cu1 * cu2, al1 * al2 /;
+  31   
+  32  table gradereq( elements, * )
+  33          min     max
+  34  c       2       3
+  35  cu      0.4     0.6
+  36  mn      1.2     1.65
+  37  ;
+  38   
+  39  Table data(raw, * )
+  40          c       cu      mn      avail   cost
+  41  iron1   2.5             1.3     400     200
+  42  iron2   3               0.8     300     250
+  43  iron3           0.3             600     150
+  44  cu1             90              500     220
+  45  cu2             96      4       200     240
+  46  al1             0.4     1.2     300     200
+  47  al2             0.6             250     165
+  48  ;
+  49   
+  50  Scalar dem /500/;
+  51   
+  52  Positive variables
+  53          use(raw) 'raw material that could be  used';
+  54   
+  55  Variables
+  56          obj     'Objective variable';
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 2
+Alloy blending
+C o m p i l a t i o n
+
+
+  57   
+  58  Equations
+  59          objective 'final blend requirements',
+  60          balance(raw) 'balance raw available materials',
+  61          production,
+  62          equa_max_constraint(elements) 'equation for maximum limit',
+  63          equa_min_constraint(elements) 'equation for minimum limit';
+  64   
+  65  equa_max_constraint(elements)..  sum( raw, use(raw) * data(raw, elements)) / dem =l= gradereq(elements, "max");
+  66  equa_min_constraint(elements)..  sum( raw, use(raw) * data(raw, elements)) / dem =g= gradereq(elements, "min");
+  67   
+  68  production..  sum( raw, use(raw) ) =e= dem;
+  69  balance(raw)..  use(raw) =l= data( raw, "avail");
+  70  objective.. obj =e= sum( raw, data( raw, "cost") * use(raw) );
+  71   
+  72  Model  Prob1 'Alloy blending' /all/;
+  73   
+  74  solve Prob1  using lp minimizing  obj;
+  75   
+  76  display  Prob1.objval, use.l;
+  77   
+  78  parameter pct(elements) "raw material used percentage";
+  79   
+  80  * Calculate the  percentage
+  81   
+  82  pct(elements) =  sum(raw, use.l(raw) * data(raw, elements )) / dem;
+  83   
+  84  display pct;
+  85   
+  86   
+  87   
+
+
+COMPILATION TIME     =        0.013 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 3
+Alloy blending
+Equation Listing    SOLVE Prob1 Using LP From line 74
+
+
+---- objective  =E=  final blend requirements
+
+objective..  - 200*use(iron1) - 250*use(iron2) - 150*use(iron3) - 220*use(cu1) - 240*use(cu2) - 200*use(al1) - 165*use(al2) + obj =E= 0 ; (LHS = 0)
+     
+
+---- balance  =L=  balance raw available materials
+
+balance(iron1)..  use(iron1) =L= 400 ; (LHS = 0)
+     
+balance(iron2)..  use(iron2) =L= 300 ; (LHS = 0)
+     
+balance(iron3)..  use(iron3) =L= 600 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- production  =E=  
+
+production..  use(iron1) + use(iron2) + use(iron3) + use(cu1) + use(cu2) + use(al1) + use(al2) =E= 500 ; (LHS = 0, INFES = 500 ****)
+     
+
+---- equa_max_constraint  =L=  equation for maximum limit
+
+equa_max_constraint(c)..  0.005*use(iron1) + 0.006*use(iron2) =L= 3 ; (LHS = 0)
+     
+equa_max_constraint(cu)..  0.0006*use(iron3) + 0.18*use(cu1) + 0.192*use(cu2) + 0.0008*use(al1) + 0.0012*use(al2) =L= 0.6 ; (LHS = 0)
+     
+equa_max_constraint(mn)..  0.0026*use(iron1) + 0.0016*use(iron2) + 0.008*use(cu2) + 0.0024*use(al1) =L= 1.65 ; (LHS = 0)
+     
+
+---- equa_min_constraint  =G=  equation for minimum limit
+
+equa_min_constraint(c)..  0.005*use(iron1) + 0.006*use(iron2) =G= 2 ; (LHS = 0, INFES = 2 ****)
+     
+equa_min_constraint(cu)..  0.0006*use(iron3) + 0.18*use(cu1) + 0.192*use(cu2) + 0.0008*use(al1) + 0.0012*use(al2) =G= 0.4 ; (LHS = 0, INFES = 0.4 ****)
+     
+equa_min_constraint(mn)..  0.0026*use(iron1) + 0.0016*use(iron2) + 0.008*use(cu2) + 0.0024*use(al1) =G= 1.2 ; (LHS = 0, INFES = 1.2 ****)
+     
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 4
+Alloy blending
+Column Listing      SOLVE Prob1 Using LP From line 74
+
+
+---- use  raw material that could be  used
+
+use(iron1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -200       objective
+        1       balance(iron1)
+        1       production
+        0.005   equa_max_constraint(c)
+        0.0026  equa_max_constraint(mn)
+        0.005   equa_min_constraint(c)
+        0.0026  equa_min_constraint(mn)
+
+use(iron2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -250       objective
+        1       balance(iron2)
+        1       production
+        0.006   equa_max_constraint(c)
+        0.0016  equa_max_constraint(mn)
+        0.006   equa_min_constraint(c)
+        0.0016  equa_min_constraint(mn)
+
+use(iron3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -150       objective
+        1       balance(iron3)
+        1       production
+        0.0006  equa_max_constraint(cu)
+        0.0006  equa_min_constraint(cu)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- obj  Objective variable
+
+obj
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 5
+Alloy blending
+Model Statistics    SOLVE Prob1 Using LP From line 74
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           15
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES            8
+NON ZERO ELEMENTS            44
+
+
+GENERATION TIME      =        0.067 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.068 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 6
+Alloy blending
+Solution Report     SOLVE Prob1 Using LP From line 74
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Prob1               OBJECTIVE  obj
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  74
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE            98121.6358
+
+ RESOURCE USAGE, LIMIT          0.541      1000.000
+ ITERATION COUNT, LIMIT         4    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.17sec (det. 0.02 ticks)
+Optimal solution found.
+Objective :       98121.635792
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+  objective  final blend requirements
+
+---- EQU balance  balance raw available materials
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+iron1        -INF          400.0000       400.0000        -4.4949      
+iron2        -INF             .           300.0000          .          
+iron3        -INF           39.7763       600.0000          .          
+cu1          -INF             .           500.0000          .          
+cu2          -INF            2.7613       200.0000          .          
+al1          -INF           57.4624       300.0000          .          
+al2          -INF             .           250.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU production       500.0000       500.0000       500.0000       150.2412      
+
+---- EQU equa_max_constraint  equation for maximum limit
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+c         -INF            2.0000         3.0000          .          
+cu        -INF            0.6000         0.6000      -401.9574      
+mn        -INF            1.2000         1.6500          .          
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 7
+Alloy blending
+Solution Report     SOLVE Prob1 Using LP From line 74
+
+
+---- EQU equa_min_constraint  equation for minimum limit
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+c          2.0000         2.0000        +INF             .          
+cu         0.4000         0.6000        +INF             .          
+mn         1.2000         1.2000        +INF        20866.8298      
+
+---- VAR use  raw material that could be  used
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+iron1          .           400.0000        +INF             .          
+iron2          .              .            +INF           66.3719      
+iron3          .            39.7763        +INF             .          
+cu1            .              .            +INF          142.1111      
+cu2            .             2.7613        +INF             .          
+al1            .            57.4624        +INF             .          
+al2            .              .            +INF           15.2412      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR obj               -INF        98121.6358        +INF             .          
+
+  obj  Objective variable
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:45 Page 8
+Alloy blending
+E x e c u t i o n
+
+
+----     76 MODEL Prob1.ObjVal             =    98121.636  Alloy blending
+
+----     76 VARIABLE use.L  raw material that could be  used
+
+iron1 400.000,    iron3  39.776,    cu2     2.761,    al1    57.462
+
+
+----     84 PARAMETER pct  raw material used percentage
+
+c  2.000,    cu 0.600,    mn 1.200
+
+
+
+EXECUTION TIME       =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+USER: Course License: COMPSCI 735 - 01OPTIMIZATION:TEG181128/0001AO-GEN
+      University of Wisconsin-Whitewater, Department of MathematDC12896
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      /home/nouroudine/GithubProject/Optimization-Techniques-Applications/Projects/Project2/Problem1.gms
+Output     /home/nouroudine/GithubProject/Optimization-Techniques-Applications/Projects/Project2/Problem1.lst

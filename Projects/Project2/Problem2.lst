@@ -1,0 +1,289 @@
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1   
+      * Ex 1.12 Murty LP
+      A forestry company has four sites on which they grow trees.
+      They are considering four species of trees, the pines, spruces,
+      walnuts and other hardwoods.   Data on the problem are given below.
+       
+      \begin{tabular}
+      Site & Area (ka) & \multicolumn{4}{c}{Expected annual yield ($m^3/ka$)} & \multicolumns{4}{c}{Expected annual revenue (money units per ka)} \\
+      Number & & Pine & Spruce & Walnut & Hardwood & Pine & Spruce & Walnut & Hardwood \\
+      1 & 1500 &   17 & 14 & 10  & 9   & 16 & 12 & 20 & 18 \\
+      2 & 1700   & 15 & 16 & 12 & 11   & 14 & 13 & 24 & 20 \\
+      3 & 900   & 13 & 12 & 14  & 8   & 17 & 10 & 28 & 20 \\
+      4 & 600   & 10 & 11  & 8  & 6   & 12 & 11 & 18 & 17 \\
+      \multicolumn{2}{l}{Minumum required yield} & 22.5 & 9 & 4.8 & 3.5
+      \end{tabular}
+       
+      How much area should the company devote to the growing of various species
+      in the various sites?
+  21   
+  22  Set
+  23          site /1*4/
+  24          species / p "pine", s "spruce", w "walnut", h "hardwood"/;
+  25   
+  26  Parameter area(site) "area at site in ka "
+  27  /
+  28  1 1500
+  29  2 1700
+  30  3 900
+  31  4 600
+  32  /
+  33   
+  34  Table yield(site, species) "m^3 per ka"
+  35          p       s       w       h
+  36  1       17      14      10      9
+  37  2       15      16      12      11
+  38  3       13      12      14      8
+  39  4       10      11      8       6
+  40  ;
+  41   
+  42  Table revenue(site, species ) "$ in ka"
+  43          p       s       w       h
+  44  1       16      12      20      18
+  45  2       14      13      24      20
+  46  3       17      10      28      20
+  47  4       12      11      18      17
+  48  ;
+  49   
+  50  Parameter minyield(species) "minimal required yield (km^3)"
+  51  /
+  52  p 22.5
+  53  s 9
+  54  w 4.8
+  55  h 3.5
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+  56  /;
+  57   
+  58  * Convert units
+  59  minyield(species) = 1000 * minyield(species);
+  60   
+  61  * variables
+  62  Positive variable
+  63          grow(site, species) 'Number of species that could be grown in each site';
+  64   
+  65  Variable
+  66          profit 'Profit that needs to be optimized';
+  67   
+  68  Equations
+  69          objective,
+  70          species_constraint(species) 'constraint for species',
+  71          site_constraint(site) 'constraint for the  area that need to be allocated';
+  72   
+  73  species_constraint(species).. sum( site, grow(site, species)  * yield( site, species )) =g=  minyield(species);
+  74  site_constraint(site).. sum(species, grow(site, species )) =l= area(site);
+  75  Objective.. profit =e= sum((site, species ), grow( site, species ) * revenue( site, species ));
+  76   
+  77   
+  78  Model Prob2 /all/;
+  79   
+  80  Solve Prob2 using lp maximizing  profit;
+  81   
+  82  display Prob2.objval;
+  83   
+  84   
+  85   
+
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Prob2 Using LP From line 80
+
+
+---- objective  =E=  
+
+objective..  - 16*grow(1,p) - 12*grow(1,s) - 20*grow(1,w) - 18*grow(1,h) - 14*grow(2,p) - 13*grow(2,s) - 24*grow(2,w) - 20*grow(2,h) - 17*grow(3,p) - 10*grow(3,s) - 28*grow(3,w) - 20*grow(3,h) - 12*grow(4,p) - 11*grow(4,s) - 18*grow(4,w) - 17*grow(4,h)
+     
+      + profit =E= 0 ; (LHS = 0)
+     
+
+---- species_constraint  =G=  constraint for species
+
+species_constraint(p)..  17*grow(1,p) + 15*grow(2,p) + 13*grow(3,p) + 10*grow(4,p) =G= 22500 ; (LHS = 0, INFES = 22500 ****)
+     
+species_constraint(s)..  14*grow(1,s) + 16*grow(2,s) + 12*grow(3,s) + 11*grow(4,s) =G= 9000 ; (LHS = 0, INFES = 9000 ****)
+     
+species_constraint(w)..  10*grow(1,w) + 12*grow(2,w) + 14*grow(3,w) + 8*grow(4,w) =G= 4800 ; (LHS = 0, INFES = 4800 ****)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- site_constraint  =L=  constraint for the  area that need to be allocated
+
+site_constraint(1)..  grow(1,p) + grow(1,s) + grow(1,w) + grow(1,h) =L= 1500 ; (LHS = 0)
+     
+site_constraint(2)..  grow(2,p) + grow(2,s) + grow(2,w) + grow(2,h) =L= 1700 ; (LHS = 0)
+     
+site_constraint(3)..  grow(3,p) + grow(3,s) + grow(3,w) + grow(3,h) =L= 900 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Prob2 Using LP From line 80
+
+
+---- grow  Number of species that could be grown in each site
+
+grow(1,p)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -16       objective
+       17       species_constraint(p)
+        1       site_constraint(1)
+
+grow(1,s)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -12       objective
+       14       species_constraint(s)
+        1       site_constraint(1)
+
+grow(1,w)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -20       objective
+       10       species_constraint(w)
+        1       site_constraint(1)
+
+REMAINING 13 ENTRIES SKIPPED
+
+---- profit  Profit that needs to be optimized
+
+profit
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Prob2 Using LP From line 80
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS            9
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           17
+NON ZERO ELEMENTS            49
+
+
+GENERATION TIME      =        0.003 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Prob2 Using LP From line 80
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Prob2               OBJECTIVE  profit
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  80
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE            95031.1887
+
+ RESOURCE USAGE, LIMIT          0.004      1000.000
+ ITERATION COUNT, LIMIT         5    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.02 ticks)
+Optimal solution found.
+Objective :       95031.188725
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+---- EQU species_constraint  constraint for species
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+p     22500.0000     22500.0000        +INF           -0.3309      
+s      9000.0000      9000.0000        +INF           -0.6875      
+w      4800.0000     28240.4412        +INF             .          
+h      3500.0000      3500.0000        +INF           -0.2604      
+
+---- EQU site_constraint  constraint for the  area that need to be allocated
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1        -INF         1500.0000      1500.0000        21.6250      
+2        -INF         1700.0000      1700.0000        24.0000      
+3        -INF          900.0000       900.0000        28.0000      
+4        -INF          600.0000       600.0000        18.5625      
+
+---- VAR grow  Number of species that could be grown in each site
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.p          .          1323.5294        +INF             .          
+1.s          .           176.4706        +INF             .          
+1.w          .              .            +INF           -1.6250      
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Prob2 Using LP From line 80
+
+
+     VAR grow  Number of species that could be grown in each site
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+1.h          .              .            +INF           -1.2813      
+2.p          .              .            +INF           -5.0368      
+2.s          .           396.6299        +INF             .          
+2.w          .          1303.3701        +INF             .          
+2.h          .              .            +INF           -1.1354      
+3.p          .              .            +INF           -6.6985      
+3.s          .              .            +INF           -9.7500      
+3.w          .           900.0000        +INF             .          
+3.h          .              .            +INF           -5.9167      
+4.p          .              .            +INF           -3.2537      
+4.s          .            16.6667        +INF             .          
+4.w          .              .            +INF           -0.5625      
+4.h          .           583.3333        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR profit            -INF        95031.1887        +INF             .          
+
+  profit  Profit that needs to be optimized
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/20/19 21:29:52 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     82 MODEL Prob2.ObjVal             =    95031.189  
+
+
+EXECUTION TIME       =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+USER: Course License: COMPSCI 735 - 01OPTIMIZATION:TEG181128/0001AO-GEN
+      University of Wisconsin-Whitewater, Department of MathematDC12896
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      /home/nouroudine/GithubProject/Optimization-Techniques-Applications/Projects/Project2/Problem2.gms
+Output     /home/nouroudine/GithubProject/Optimization-Techniques-Applications/Projects/Project2/Problem2.lst
