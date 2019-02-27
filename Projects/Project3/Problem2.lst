@@ -1,0 +1,658 @@
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1   
+   2  Set
+   3          i / W "WineGlass", B "BeerGlass", C "ChampagneGlass", WH "WhiskeyGlass" /,
+   4          j / M "Molding", P "Packaging Time", G "Glass", S "Selling Price"/,
+   5          t / M "Molding", P "Packaging Time", G "Glass"/;
+   6   
+   7  Table ressources(j, i ) "Table of ressouces "
+   8          W       B       C       WH
+   9  M       4       9       7       10
+  10  P       1       1       3       40
+  11  G       3       4       2       1
+  12  S       6       10      9       20
+  13  ;
+  14   
+  15  Table dual_ressources(i, t) "Dual ressources"
+  16          M       P       G
+  17  W       4       1       3
+  18  B       9       1       4
+  19  C       7       3       2
+  20  WH      10      40      1
+  21  ;
+  22   
+  23  Parameter data(t) "Condition boundaries"
+  24  /
+  25  M 600
+  26  P 400
+  27  G 500
+  28  /;
+  29   
+  30  Free variables
+  31          revenue "get the maximum",
+  32          min_revenue "get the duality";
+  33   
+  34   
+  35  Variables
+  36   
+  37          x(i) "reference to the elements in the set",
+  38          y(t) "reference the duality elements in the set";
+  39   
+  40  Equations
+  41          objective,
+  42          objective_2,
+  43          molding_constraint,
+  44          packaging_constrant,
+  45          glass_constraint,
+  46          common_constraint(i),
+  47          wine_constraint,
+  48          beer_constraint,
+  49          champagne_constraint,
+  50          wiskey_constraint,
+  51          common_constraint_2(t);
+  52   
+  53  ********************************* Model_1 **************************
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+  54  objective.. revenue =e= sum(i, x(i) * ressources("S", i ) );
+  55   
+  56  molding_constraint.. sum( i, x(i) * ressources("M", i ) ) =l= 600;
+  57   
+  58  packaging_constrant.. sum( i, x(i) * ressources("P", i ) ) =l= 400;
+  59   
+  60  glass_constraint.. sum(i, x(i) * ressources("G", i )) =l= 500;
+  61   
+  62  common_constraint(i).. x(i) =g= 0;
+  63   
+  64   
+  65  *************************************** Model_2 *************************
+  66   
+  67  objective_2.. min_revenue =e= sum( t, data(t) * y(t) );
+  68   
+  69  wine_constraint..  sum(t, dual_ressources("W", t) * y(t) )  =g= 6;
+  70   
+  71  beer_constraint..  sum( t, dual_ressources("B", t ) * y(t) ) =g= 10;
+  72   
+  73  champagne_constraint.. sum( t, dual_ressources("C", t ) * y(t) ) =g= 9;
+  74   
+  75  wiskey_constraint.. sum(t, dual_ressources("WH", t ) * y(t) ) =g= 20;
+  76   
+  77  common_constraint_2(t).. y(t) =g= 0;
+  78   
+  79  Model
+  80          Prob_2 /all/,
+  81          Prob_2_2 /all/;
+  82   
+  83  Solve Prob_2 using lp maximizing revenue;
+  84  Solve Prob_2_2 using lp minimizing min_revenue;
+  85   
+  86  display Prob_2.objval;
+  87  Display  Prob_2_2.objval;
+  88   
+  89   
+  90   
+  91   
+
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Prob_2 Using LP From line 83
+
+
+---- objective  =E=  
+
+objective..  revenue - 6*x(W) - 10*x(B) - 9*x(C) - 20*x(WH) =E= 0 ; (LHS = 0)
+     
+
+---- objective_2  =E=  
+
+objective_2..  min_revenue - 600*y(M) - 400*y(P) - 500*y(G) =E= 0 ; (LHS = 0)
+     
+
+---- molding_constraint  =L=  
+
+molding_constraint..  4*x(W) + 9*x(B) + 7*x(C) + 10*x(WH) =L= 600 ; (LHS = 0)
+     
+
+---- packaging_constrant  =L=  
+
+packaging_constrant..  x(W) + x(B) + 3*x(C) + 40*x(WH) =L= 400 ; (LHS = 0)
+     
+
+---- glass_constraint  =L=  
+
+glass_constraint..  3*x(W) + 4*x(B) + 2*x(C) + x(WH) =L= 500 ; (LHS = 0)
+     
+
+---- common_constraint  =G=  
+
+common_constraint(W)..  x(W) =G= 0 ; (LHS = 0)
+     
+common_constraint(B)..  x(B) =G= 0 ; (LHS = 0)
+     
+common_constraint(C)..  x(C) =G= 0 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- wine_constraint  =G=  
+
+wine_constraint..  4*y(M) + y(P) + 3*y(G) =G= 6 ; (LHS = 0, INFES = 6 ****)
+     
+
+---- beer_constraint  =G=  
+
+beer_constraint..  9*y(M) + y(P) + 4*y(G) =G= 10 ; (LHS = 0, INFES = 10 ****)
+     
+
+---- champagne_constraint  =G=  
+
+champagne_constraint..  7*y(M) + 3*y(P) + 2*y(G) =G= 9 ; (LHS = 0, INFES = 9 ****)
+     
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Prob_2 Using LP From line 83
+
+
+---- wiskey_constraint  =G=  
+
+wiskey_constraint..  10*y(M) + 40*y(P) + y(G) =G= 20 ; (LHS = 0, INFES = 20 ****)
+     
+
+---- common_constraint_2  =G=  
+
+common_constraint_2(M)..  y(M) =G= 0 ; (LHS = 0)
+     
+common_constraint_2(P)..  y(P) =G= 0 ; (LHS = 0)
+     
+common_constraint_2(G)..  y(G) =G= 0 ; (LHS = 0)
+     
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Prob_2 Using LP From line 83
+
+
+---- revenue  get the maximum
+
+revenue
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+
+---- min_revenue  get the duality
+
+min_revenue
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective_2
+
+
+---- x  reference to the elements in the set
+
+x(W)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -6       objective
+        4       molding_constraint
+        1       packaging_constrant
+        3       glass_constraint
+        1       common_constraint(W)
+
+x(B)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+      -10       objective
+        9       molding_constraint
+        1       packaging_constrant
+        4       glass_constraint
+        1       common_constraint(B)
+
+x(C)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -9       objective
+        7       molding_constraint
+        3       packaging_constrant
+        2       glass_constraint
+        1       common_constraint(C)
+
+REMAINING ENTRY SKIPPED
+
+---- y  reference the duality elements in the set
+
+y(M)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -600       objective_2
+        4       wine_constraint
+        9       beer_constraint
+        7       champagne_constraint
+       10       wiskey_constraint
+        1       common_constraint_2(M)
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Prob_2 Using LP From line 83
+
+
+     y  reference the duality elements in the set
+
+y(P)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -400       objective_2
+        1       wine_constraint
+        1       beer_constraint
+        3       champagne_constraint
+       40       wiskey_constraint
+        1       common_constraint_2(P)
+
+y(G)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -500       objective_2
+        3       wine_constraint
+        4       beer_constraint
+        2       champagne_constraint
+        1       wiskey_constraint
+        1       common_constraint_2(G)
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Prob_2 Using LP From line 83
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          11     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES            9
+NON ZERO ELEMENTS            40
+
+
+GENERATION TIME      =        0.003 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Prob_2 Using LP From line 83
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Prob_2              OBJECTIVE  revenue
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  83
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              933.3333
+
+ RESOURCE USAGE, LIMIT          0.004      1000.000
+ ITERATION COUNT, LIMIT         2    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.02 ticks)
+Optimal solution found.
+Objective :         933.333333
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+---- EQU objective~          .              .              .             EPS         
+---- EQU molding_c~        -INF          600.0000       600.0000         1.4667      
+---- EQU packaging~        -INF          400.0000       400.0000         0.1333      
+---- EQU glass_con~        -INF          406.6667       500.0000          .          
+
+---- EQU common_constraint  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+W           .           133.3333        +INF             .          
+B           .              .            +INF           -3.3333      
+C           .              .            +INF           -1.6667      
+WH          .             6.6667        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU wine_cons~         6.0000         8.0000        +INF             .          
+---- EQU beer_cons~        10.0000        18.0000        +INF             .          
+---- EQU champagne~         9.0000        14.0000        +INF             .          
+---- EQU wiskey_co~        20.0000        20.0000        +INF            EPS         
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                02/27/19 07:56:01 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Prob_2 Using LP From line 83
+
+
+---- EQU common_constraint_2  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+M          .             2.0000        +INF             .          
+P          .              .            +INF            EPS         
+G          .              .            +INF            EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR revenue           -INF          933.3333        +INF             .          
+---- VAR min_reven~        -INF         1200.0000        +INF             .          
+
+  revenue  get the maximum
+  min_revenue  get the duality
+
+---- VAR x  reference to the elements in the set
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+W         -INF          133.3333        +INF             .          
+B         -INF             .            +INF             .          
+C         -INF             .            +INF             .          
+WH        -INF            6.6667        +INF             .          
+
+---- VAR y  reference the duality elements in the set
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+M        -INF            2.0000        +INF             .          
+P        -INF             .            +INF             .          
+G        -INF             .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Prob_2_2 Using LP From line 84
+
+
+---- objective  =E=  
+
+objective..  revenue - 6*x(W) - 10*x(B) - 9*x(C) - 20*x(WH) =E= 0 ; (LHS = 0)
+     
+
+---- objective_2  =E=  
+
+objective_2..  min_revenue - 600*y(M) - 400*y(P) - 500*y(G) =E= 0 ; (LHS = 0)
+     
+
+---- molding_constraint  =L=  
+
+molding_constraint..  4*x(W) + 9*x(B) + 7*x(C) + 10*x(WH) =L= 600 ; (LHS = 600)
+     
+
+---- packaging_constrant  =L=  
+
+packaging_constrant..  x(W) + x(B) + 3*x(C) + 40*x(WH) =L= 400 ; (LHS = 400)
+     
+
+---- glass_constraint  =L=  
+
+glass_constraint..  3*x(W) + 4*x(B) + 2*x(C) + x(WH) =L= 500 ; (LHS = 406.666666666667)
+     
+
+---- common_constraint  =G=  
+
+common_constraint(W)..  x(W) =G= 0 ; (LHS = 133.333333333333)
+     
+common_constraint(B)..  x(B) =G= 0 ; (LHS = 0)
+     
+common_constraint(C)..  x(C) =G= 0 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- wine_constraint  =G=  
+
+wine_constraint..  4*y(M) + y(P) + 3*y(G) =G= 6 ; (LHS = 8)
+     
+
+---- beer_constraint  =G=  
+
+beer_constraint..  9*y(M) + y(P) + 4*y(G) =G= 10 ; (LHS = 18)
+     
+
+---- champagne_constraint  =G=  
+
+champagne_constraint..  7*y(M) + 3*y(P) + 2*y(G) =G= 9 ; (LHS = 14)
+     
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Prob_2_2 Using LP From line 84
+
+
+---- wiskey_constraint  =G=  
+
+wiskey_constraint..  10*y(M) + 40*y(P) + y(G) =G= 20 ; (LHS = 20)
+     
+
+---- common_constraint_2  =G=  
+
+common_constraint_2(M)..  y(M) =G= 0 ; (LHS = 2)
+     
+common_constraint_2(P)..  y(P) =G= 0 ; (LHS = 0)
+     
+common_constraint_2(G)..  y(G) =G= 0 ; (LHS = 0)
+     
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Prob_2_2 Using LP From line 84
+
+
+---- revenue  get the maximum
+
+revenue
+                (.LO, .L, .UP, .M = -INF, 933.333333333333, +INF, 0)
+        1       objective
+
+
+---- min_revenue  get the duality
+
+min_revenue
+                (.LO, .L, .UP, .M = -INF, 1200, +INF, 0)
+        1       objective_2
+
+
+---- x  reference to the elements in the set
+
+x(W)
+                (.LO, .L, .UP, .M = -INF, 133.333333333333, +INF, 0)
+       -6       objective
+        4       molding_constraint
+        1       packaging_constrant
+        3       glass_constraint
+        1       common_constraint(W)
+
+x(B)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+      -10       objective
+        9       molding_constraint
+        1       packaging_constrant
+        4       glass_constraint
+        1       common_constraint(B)
+
+x(C)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -9       objective
+        7       molding_constraint
+        3       packaging_constrant
+        2       glass_constraint
+        1       common_constraint(C)
+
+REMAINING ENTRY SKIPPED
+
+---- y  reference the duality elements in the set
+
+y(M)
+                (.LO, .L, .UP, .M = -INF, 2, +INF, 0)
+     -600       objective_2
+        4       wine_constraint
+        9       beer_constraint
+        7       champagne_constraint
+       10       wiskey_constraint
+        1       common_constraint_2(M)
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Prob_2_2 Using LP From line 84
+
+
+     y  reference the duality elements in the set
+
+y(P)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -400       objective_2
+        1       wine_constraint
+        1       beer_constraint
+        3       champagne_constraint
+       40       wiskey_constraint
+        1       common_constraint_2(P)
+
+y(G)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+     -500       objective_2
+        3       wine_constraint
+        4       beer_constraint
+        2       champagne_constraint
+        1       wiskey_constraint
+        1       common_constraint_2(G)
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Prob_2_2 Using LP From line 84
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          11     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES            9
+NON ZERO ELEMENTS            40
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Prob_2_2 Using LP From line 84
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Prob_2_2            OBJECTIVE  min_revenue
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  84
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              933.3333
+
+ RESOURCE USAGE, LIMIT          0.005      1000.000
+ ITERATION COUNT, LIMIT         1    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 0.03 ticks)
+Optimal solution found.
+Objective :         933.333333
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             EPS         
+---- EQU objective~          .              .              .             1.0000      
+---- EQU molding_c~        -INF             .           600.0000          .          
+---- EQU packaging~        -INF             .           400.0000          .          
+---- EQU glass_con~        -INF             .           500.0000          .          
+
+---- EQU common_constraint  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+W           .              .            +INF            EPS         
+B           .              .            +INF            EPS         
+C           .              .            +INF            EPS         
+WH          .              .            +INF            EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU wine_cons~         6.0000         6.0000        +INF          133.3333      
+---- EQU beer_cons~        10.0000        13.3333        +INF             .          
+---- EQU champagne~         9.0000        10.6667        +INF             .          
+---- EQU wiskey_co~        20.0000        20.0000        +INF            6.6667      
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Prob_2_2 Using LP From line 84
+
+
+---- EQU common_constraint_2  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+M          .             1.4667        +INF             .          
+P          .             0.1333        +INF             .          
+G          .              .            +INF           93.3333      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR revenue           -INF             .            +INF             .          
+---- VAR min_reven~        -INF          933.3333        +INF             .          
+
+  revenue  get the maximum
+  min_revenue  get the duality
+
+---- VAR x  reference to the elements in the set
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+W         -INF             .            +INF             .          
+B         -INF             .            +INF             .          
+C         -INF             .            +INF             .          
+WH        -INF             .            +INF             .          
+
+---- VAR y  reference the duality elements in the set
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+M        -INF            1.4667        +INF             .          
+P        -INF            0.1333        +INF             .          
+G        -INF             .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               02/27/19 07:56:01 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     86 MODEL Prob_2.ObjVal            =      933.333  
+
+----     87 MODEL Prob_2_2.ObjVal          =      933.333  
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+USER: Course License: COMPSCI 735 - 01OPTIMIZATION:TEG181128/0001AO-GEN
+      University of Wisconsin-Whitewater, Department of MathematDC12896
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      /home/nouroudine/Documents/Spring_2019/Optimization/Homework/Homework4/Homework4/Project3/Problem2.gms
+Output     /home/nouroudine/Documents/Spring_2019/Optimization/Homework/Homework4/Homework4/Project3/Problem2.lst
