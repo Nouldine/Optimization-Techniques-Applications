@@ -1,0 +1,352 @@
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 1
+Malfoy Catering
+C o m p i l a t i o n
+
+
+   2   
+   9   
+  10  Sets
+  11          Nodes                   /t1*t10, h1*h10, store, trash/
+  12          T(Nodes)                /t1*t10/
+  13          H(Nodes)                /h1*h10/
+  14          Arcs(Nodes, Nodes)
+  15  ;
+  16   
+  17  Parameters
+  18          d(T) / t1 50, t2 60, t3  80, t4 70, t5 50, t6 60, t7 90, t8 80, t9 90, t10 100 /
+  19          c(Nodes, Nodes)
+  20          b(Nodes)
+  21  ;
+  22   
+  23  Scalars
+  24          alpha           /200/
+  25          beta            /75/
+  26          gamma           /25/
+  27          p               /4/
+  28          q               /2/
+  29          MM              /5000/
+  30  ;
+  31   
+  32  Alias
+  33          (Nodes, I, J);
+  34   
+  35  Alias
+  36          ( H, H1, H2 );
+  37   
+  38   
+  39  * Put arc from last hamper to trash
+  40  Arcs('store', T ) = yes;
+  41  c('store', T ) = alpha;
+  42   
+  43  * Put arc from last hamper to trash
+  44  Arcs('h10', 'trash') = yes;
+  45   
+  46  * Put arc from storen to trash
+  47  Arcs('store', 'trash') = yes;
+  48   
+  49  * Put arcs from hamper node to demand nodes
+  50  Arcs( H, T ) = yes$((ord(T) = ord(H) + q ) or ( ord(T) = ord(H) + p ));
+  51  c( H, T )$(ord(T) = ord(H) + q ) = beta;
+  52  c( H, T )$(ord(T) = ord(H) + p ) = gamma;
+  53   
+  54  * Put arcs from hamper nodes to hamper nodes
+  55  Arcs( H1, H2 ) = yes$( ord(H2) =  ord(H1) + 1 );
+  56   
+  57  Display Arcs;
+  58   
+  59  * Set up b. First for demand nodes
+  60   
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 2
+Malfoy Catering
+C o m p i l a t i o n
+
+
+  61  b(T) = -d(T);
+  62   
+  63  * Now for hampers. ( This one is bit strange, but it works )
+  64  b(H) = sum(T$(ord(T) = ord(H)), d(T));
+  65   
+  66   
+  67  * Now for store and trash
+  68   
+  69  b('store') = MM;
+  70  b('trash') = -MM;
+  71   
+  72  Display b;
+  73   
+  74  * Define the  right variable
+  75   
+  76  Positive variables
+  77          X(Nodes, Nodes);
+  78   
+  79  Variables
+  80          TotalCost;
+  81   
+  82  Equations
+  83          Objective_equa
+  84          Flow_balance(Nodes)
+  85  ;
+  86   
+  87  Objective_equa.. TotalCost =e= sum(Arcs, c(Arcs) * X(Arcs));
+  88   
+  89  Flow_balance(I).. sum(J$Arcs(I,J), X(I,J)) - sum(J$Arcs(J, I), X(J, I)) =e= b(I);
+  90   
+  91  Model MalfoyCatering /all/;
+  92  Solve MalfoyCatering  using lp minimizing TotalCost;
+  93   
+  94  Parameters
+  95          Cost
+  96          NumEqu
+  97          NumBought
+  98  ;
+  99   
+ 100  Cost = TotalCost.L;
+ 101  NumEqu = MalfoyCatering.numequ;
+ 102  NumBought = sum( T, x.L('store', T));
+ 103   
+ 104  Display Cost, NumEqu;
+ 105  Display NumBought;
+ 106   
+ 107   
+
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 3
+Malfoy Catering
+E x e c u t i o n
+
+
+----     57 SET Arcs  
+
+               t1          t2          t3          t4          t5          t6          t7          t8          t9         t10          h2          h3          h4          h5          h6          h7          h8          h9         h10       trash
+
+h1                                    YES                     YES                                                                     YES
+h2                                                YES                     YES                                                                     YES
+h3                                                            YES                     YES                                                                     YES
+h4                                                                        YES                     YES                                                                     YES
+h5                                                                                    YES                     YES                                                                     YES
+h6                                                                                                YES                     YES                                                                     YES
+h7                                                                                                            YES                                                                                             YES
+h8                                                                                                                        YES                                                                                             YES
+h9                                                                                                                                                                                                                                    YES
+h10                                                                                                                                                                                                                                               YES
+store         YES         YES         YES         YES         YES         YES         YES         YES         YES         YES                                                                                                                     YES
+
+
+----     72 PARAMETER b  
+
+t1      -50.000,    t2      -60.000,    t3      -80.000,    t4      -70.000,    t5      -50.000,    t6      -60.000,    t7      -90.000,    t8      -80.000,    t9      -90.000,    t10    -100.000,    h1       50.000,    h2       60.000,    h3       80.000
+h4       70.000,    h5       50.000,    h6       60.000,    h7       90.000,    h8       80.000,    h9       90.000,    h10     100.000,    store  5000.000,    trash -5000.000
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 4
+Malfoy Catering
+Equation Listing    SOLVE MalfoyCatering Using LP From line 92
+
+
+---- Objective_equa  =E=  
+
+Objective_equa..  - 75*X(h1,t3) - 25*X(h1,t5) - 75*X(h2,t4) - 25*X(h2,t6) - 75*X(h3,t5) - 25*X(h3,t7) - 75*X(h4,t6) - 25*X(h4,t8) - 75*X(h5,t7) - 25*X(h5,t9) - 75*X(h6,t8) - 25*X(h6,t10) - 75*X(h7,t9) - 75*X(h8,t10) - 200*X(store,t1) - 200*X(store,t2)
+     
+      - 200*X(store,t3) - 200*X(store,t4) - 200*X(store,t5) - 200*X(store,t6) - 200*X(store,t7) - 200*X(store,t8) - 200*X(store,t9) - 200*X(store,t10) + TotalCost =E= 0 ; (LHS = 0)
+     
+
+---- Flow_balance  =E=  
+
+Flow_balance(t1)..  - X(store,t1) =E= -50 ; (LHS = 0, INFES = 50 ****)
+     
+Flow_balance(t2)..  - X(store,t2) =E= -60 ; (LHS = 0, INFES = 60 ****)
+     
+Flow_balance(t3)..  - X(h1,t3) - X(store,t3) =E= -80 ; (LHS = 0, INFES = 80 ****)
+     
+REMAINING 19 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 5
+Malfoy Catering
+Column Listing      SOLVE MalfoyCatering Using LP From line 92
+
+
+---- X  
+
+X(h1,t3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -75       Objective_equa
+       -1       Flow_balance(t3)
+        1       Flow_balance(h1)
+
+X(h1,t5)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      -25       Objective_equa
+       -1       Flow_balance(t5)
+        1       Flow_balance(h1)
+
+X(h1,h2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       Flow_balance(h1)
+       -1       Flow_balance(h2)
+
+REMAINING 32 ENTRIES SKIPPED
+
+---- TotalCost  
+
+TotalCost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Objective_equa
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 6
+Malfoy Catering
+Model Statistics    SOLVE MalfoyCatering Using LP From line 92
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           23
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           36
+NON ZERO ELEMENTS            95
+
+
+GENERATION TIME      =        0.089 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.090 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 7
+Malfoy Catering
+Solution Report     SOLVE MalfoyCatering Using LP From line 92
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   MalfoyCatering      OBJECTIVE  TotalCost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  92
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE            69750.0000
+
+ RESOURCE USAGE, LIMIT          0.562      1000.000
+ ITERATION COUNT, LIMIT        14    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.17sec (det. 0.05 ticks)
+Optimal solution found.
+Objective :       69750.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Objective~          .              .              .             1.0000      
+
+---- EQU Flow_balance  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+t1          -50.0000       -50.0000       -50.0000       -75.0000      
+t2          -60.0000       -60.0000       -60.0000       -75.0000      
+t3          -80.0000       -80.0000       -80.0000       -75.0000      
+t4          -70.0000       -70.0000       -70.0000       -75.0000      
+t5          -50.0000       -50.0000       -50.0000       -50.0000      
+t6          -60.0000       -60.0000       -60.0000       -50.0000      
+t7          -90.0000       -90.0000       -90.0000          .          
+t8          -80.0000       -80.0000       -80.0000         EPS         
+t9          -90.0000       -90.0000       -90.0000        50.0000      
+t10        -100.0000      -100.0000      -100.0000        50.0000      
+h1           50.0000        50.0000        50.0000       -25.0000      
+h2           60.0000        60.0000        60.0000       -25.0000      
+h3           80.0000        80.0000        80.0000        25.0000      
+h4           70.0000        70.0000        70.0000        25.0000      
+h5           50.0000        50.0000        50.0000        75.0000      
+h6           60.0000        60.0000        60.0000        75.0000      
+h7           90.0000        90.0000        90.0000       125.0000      
+h8           80.0000        80.0000        80.0000       125.0000      
+h9           90.0000        90.0000        90.0000       125.0000      
+h10         100.0000       100.0000       100.0000       125.0000      
+store      5000.0000      5000.0000      5000.0000       125.0000      
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 8
+Malfoy Catering
+Solution Report     SOLVE MalfoyCatering Using LP From line 92
+
+
+     EQU Flow_balance  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+trash     -5000.0000     -5000.0000     -5000.0000       125.0000      
+
+---- VAR X  
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+h1   .t3             .              .            +INF           25.0000      
+h1   .t5             .            50.0000        +INF             .          
+h1   .h2             .              .            +INF             .          
+h2   .t4             .              .            +INF           25.0000      
+h2   .t6             .            60.0000        +INF             .          
+h2   .h3             .              .            +INF           50.0000      
+h3   .t5             .              .            +INF             .          
+h3   .t7             .            70.0000        +INF             .          
+h3   .h4             .            10.0000        +INF             .          
+h4   .t6             .              .            +INF            EPS         
+h4   .t8             .            80.0000        +INF             .          
+h4   .h5             .              .            +INF           50.0000      
+h5   .t7             .            20.0000        +INF             .          
+h5   .t9             .              .            +INF             .          
+h5   .h6             .            30.0000        +INF             .          
+h6   .t8             .              .            +INF            EPS         
+h6   .t10            .            90.0000        +INF             .          
+h6   .h7             .              .            +INF           50.0000      
+h7   .t9             .            90.0000        +INF             .          
+h7   .h8             .              .            +INF            EPS         
+h8   .t10            .            10.0000        +INF             .          
+h8   .h9             .            70.0000        +INF             .          
+h9   .h10            .           160.0000        +INF             .          
+h10  .trash          .           260.0000        +INF             .          
+store.t1             .            50.0000        +INF             .          
+store.t2             .            60.0000        +INF             .          
+store.t3             .            80.0000        +INF             .          
+store.t4             .            70.0000        +INF             .          
+store.t5             .              .            +INF           25.0000      
+store.t6             .              .            +INF           25.0000      
+store.t7             .              .            +INF           75.0000      
+store.t8             .              .            +INF           75.0000      
+store.t9             .              .            +INF          125.0000      
+store.t10            .              .            +INF          125.0000      
+store.trash          .          4740.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR TotalCost         -INF        69750.0000        +INF             .          
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                08/25/19 18:22:54 Page 9
+Malfoy Catering
+Solution Report     SOLVE MalfoyCatering Using LP From line 92
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               08/25/19 18:22:54 Page 10
+Malfoy Catering
+E x e c u t i o n
+
+
+----    104 PARAMETER Cost                 =    69750.000  
+            PARAMETER NumEqu               =       23.000  
+
+----    105 PARAMETER NumBought            =      260.000  
+
+
+EXECUTION TIME       =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+USER: GAMS Development Corporation, USA              G871201/0000CA-ANY
+      Free Demo, +1 202-342-0180, support@gams.com, www.gams.com DC0000
+
+
+**** FILE SUMMARY
+
+Input      /home/nouroudine/Documents/Spring_2019/Optimization/Homework/Homework7/Homework7/Homework7/Project4/problem.gms
+Output     /home/nouroudine/Documents/Spring_2019/Optimization/Homework/Homework7/Homework7/Homework7/Project4/problem.lst
